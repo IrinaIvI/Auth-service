@@ -2,7 +2,7 @@
 name = "workspace"
 version = "0.1.0"
 description = ""
-authors = ["Nikita Renjov <n.renjov@cft.ru>"]
+authors = ["Irina Ivashko <ira.ivashko.99@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
