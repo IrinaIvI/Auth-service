@@ -1,7 +1,7 @@
 import os
 import jwt
 
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = os.environ.get("SECRET_KEY")
 ALGORITHM = 'HS256'
 
 users = {}
@@ -23,7 +23,7 @@ class Authentication:
             if login in users:
                 payload = {'user_login': login, 'password': password}
                 token = jwt.encode(payload, SECRET_KEY, ALGORITHM)
-                if users.get(login, login) == token:
+                if users.get(login, token) == token:
                     return {'token': token}
         except jwt.PyJWTError:
             return None
