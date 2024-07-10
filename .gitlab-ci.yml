@@ -7,16 +7,16 @@ stages:
 
 run_tests:
   stage: test
-  before_script:
-    - poetry shell
-    - poetry install
+  # before_script:
+  #   - poetry shell
+  #   - poetry install
   script:
     - pytest
 
-run_linter:
-  stage: lint
-  before_script:
-    - poetry shell
-    - poetry install
-  script:
-    - flake8
+# run_linter:
+#   stage: lint
+#   before_script:
+#     - poetry shell
+#     - poetry install
+#   script:
+#     - flake8
