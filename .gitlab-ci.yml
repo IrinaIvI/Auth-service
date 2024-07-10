@@ -7,11 +7,11 @@ stages:
 
 run_tests:
   stage: test
-  # before_script:
-  #   - poetry shell
-  #   - poetry install
+  before_script:
+    - 'poetry shell'
+    - 'poetry install'
   script:
-    - pytest
+    - 'pytest'
 
 # run_linter:
 #   stage: lint
