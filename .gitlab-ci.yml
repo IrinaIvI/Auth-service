@@ -1,5 +1,7 @@
 default:
   image: python:3.12-bookworm
+  before_script:
+    - pip install poetry
 
 stages:
   - test
@@ -8,15 +10,15 @@ stages:
 run_tests:
   stage: test
   before_script:
-    - 'poetry shell'
-    - 'poetry install'
+    - poetry shell
+    - poetry install
   script:
-    - 'pytest'
+    - pytest
 
-# run_linter:
-#   stage: lint
-#   before_script:
-#     - poetry shell
-#     - poetry install
-#   script:
-#     - flake8
+run_linter:
+  stage: lint
+  before_script:
+    - poetry shell
+    - poetry install
+  script:
+    - flake8
