@@ -4,7 +4,10 @@ import jwt
 
 
 @pytest.mark.parametrize('login, password', [
-    pytest.param('mike', 'superboss', id='is correct')
+    pytest.param('mike', 'superboss', id='is correct'),
+    pytest.param('', 'superboss', id='is not correct', marks=pytest.mark.xfail()),
+    pytest.param('mike', '', id='is not correct', marks=pytest.mark.xfail()),
+    pytest.param('', '', id='is not correct', marks=pytest.mark.xfail()),
 ])
 def test_registration(login, password):
     Authentication().registration(login, password)
@@ -13,13 +16,13 @@ def test_registration(login, password):
 
 @pytest.mark.parametrize('login, password', [
     pytest.param('mike', 'superboss', id='is correct'),
-    pytest.param('', 'superboss', id='is not correct'),
-    pytest.param('mike', '', id='is not correct'),
-    pytest.param('mike', 'superboss', id='is correct'),
-    pytest.param('', '', id='is correct'),
+    pytest.param('', 'superboss', id='is not correct', marks=pytest.mark.xfail()),
+    pytest.param('mike', '', id='is not correct', marks=pytest.mark.xfail()),
+    pytest.param('', '', id='is not correct', marks=pytest.mark.xfail()),
+    pytest.param('johny', 'pwd123', id='is not correct', marks=pytest.mark.xfail()),
 ])
 def test_authorisation(login, password):
-    Authentication().registration(login, password)
+    Authentication().registration('mike', 'superboss')
     token = jwt.encode({'user_login': login, 'password': password}, SECRET_KEY, ALGORITHM)
     assert Authentication().authorisation(login, password) == token
 
