@@ -1,7 +1,7 @@
 {
-    "editor.rulers": [
-        79, 99, 119
-    ],
+    // "editor.rulers": [
+    //     79, 99, 119
+    // ],
     // https://github.com/romkatv/powerlevel10k?tab=readme-ov-file#fonts
     "terminal.integrated.fontFamily": "MesloLGS NF",
     "workbench.iconTheme": "vscode-icons",

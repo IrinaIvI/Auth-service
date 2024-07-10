@@ -1,0 +1,22 @@
+default:
+  image: python:3.12-bookworm
+
+stages:
+  - test
+  - lint
+
+run_tests:
+  stage: test
+  before_script:
+    - poetry shell
+    - poetry install
+  script:
+    - pytest
+
+run_linter:
+  stage: lint
+  before_script:
+    - poetry shell
+    - poetry install
+  script:
+    - flake8
