@@ -11,7 +11,7 @@ run_tests:
     - pip install poetry
     - poetry install
   script:
-    - pytest
+    - poetry run pytest
 
 run_linter:
   stage: lint
@@ -19,4 +19,4 @@ run_linter:
     - pip install poetry
     - poetry install
   script:
-    - flake8
+    - poetry run flake8
