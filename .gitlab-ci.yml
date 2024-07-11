@@ -11,7 +11,7 @@ run_tests:
     - pip install poetry
     - poetry install
   script:
-    - poetry run pytest src/tests -v
+    - poetry run pytest -v
 
 run_linter:
   stage: lint

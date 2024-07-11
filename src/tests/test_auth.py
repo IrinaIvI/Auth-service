@@ -1,4 +1,4 @@
-from app.auth import Authentication, SECRET_KEY, ALGORITHM, users
+from src.app.auth import Authentication, SECRET_KEY, ALGORITHM, users
 import pytest
 import jwt
 
