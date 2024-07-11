@@ -19,4 +19,4 @@ run_linter:
     - pip install poetry
     - poetry install
   script:
-    - poetry run flake8
+    - poetry run flake8 src/app

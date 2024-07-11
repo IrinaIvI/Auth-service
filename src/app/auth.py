@@ -1,10 +1,12 @@
 import os
+
 import jwt
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.environ.get('SECRET_KEY')
 ALGORITHM = 'HS256'
 
 users = {}
+
 
 class Authentication:
     """Класс аутентификации пользователя."""
