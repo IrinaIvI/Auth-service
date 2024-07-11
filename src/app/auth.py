@@ -2,7 +2,7 @@ import os
 
 import jwt
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = str(os.environ.get('SECRET_KEY'))
 ALGORITHM = 'HS256'
 
 users = {}
