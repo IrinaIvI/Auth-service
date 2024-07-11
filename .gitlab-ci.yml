@@ -9,7 +9,6 @@ run_tests:
   stage: test
   before_script:
     - pip install poetry
-    - source $(poetry env info --path)/bin/activate
     - poetry install
   script:
     - pytest
@@ -18,7 +17,6 @@ run_linter:
   stage: lint
   before_script:
     - pip install poetry
-    - source $(poetry env info --path)/bin/activate
     - poetry install
   script:
     - flake8
