@@ -8,15 +8,15 @@ stages:
 run_tests:
   stage: test
   before_script:
-    - pip install poetry -y
-    - poetry install -y
+    - pip install poetry -yqq
+    - poetry install -yqq
   script:
-    - poetry run pytest -v -y
+    - poetry run pytest -v -yqq
 
 run_linter:
   stage: lint
   before_script:
-    - pip install poetry -y
-    - poetry install -y
+    - pip install poetry -yqq
+    - poetry install -yqq
   script:
-    - poetry run flake8 -y
+    - poetry run flake8 -yqq
