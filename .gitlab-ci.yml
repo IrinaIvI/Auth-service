@@ -8,15 +8,17 @@ stages:
 run_tests:
   stage: test
   before_script:
-    - pip install poetry -yqq
-    - poetry install -yqq
+    - pip install poetry
+    - poetry install
   script:
-    - poetry run pytest -v -yqq
+    - docker run auth-service
+    - poetry run pytest -v
 
 run_linter:
   stage: lint
   before_script:
-    - pip install poetry -yqq
-    - poetry install -yqq
+    - pip install poetry
+    - poetry install
   script:
-    - poetry run flake8 -yqq
+    - docker run auth-service
+    - poetry run flake8
