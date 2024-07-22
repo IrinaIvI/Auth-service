@@ -10,6 +10,7 @@ users = []
 @dataclass
 class User:
     """Класс пользователя."""
+
     login: str
     hashed_password: str
     token: str
@@ -24,16 +25,14 @@ class Authentication:
         hashed_password = hash(password)
         user = User(login, hashed_password, token)
         users.append(user)
-        return User
+        return user
 
     def authorisation(self, login: str, password: str) -> Union[str, bool]:
         """Авторизация пользователя."""
         try:
-            if login in users:
-                payload = {'user_login': login, 'password': password}
-                token = jwt.encode(payload, SECRET_KEY, ALGORITHM)
-                if users.get(login, token) == token:
-                    return token
+            for user in users:
+                if user.login == login and user.hashed_password == hash(password):
+                    return user.token
         except jwt.PyJWTError:
             return False
 
@@ -44,3 +43,4 @@ class Authentication:
                 if user.token == token:
                     return True
             return False
+
