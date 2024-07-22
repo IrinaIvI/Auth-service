@@ -1,12 +1,18 @@
 import os
-
+from dataclasses import dataclass
 import jwt
-
-SECRET_KEY = str(os.environ.get('SECRET_KEY'))
+from typing import Union
+SECRET_KEY = str(os.environ.get('SECRET_KEY')) # переделать под yaml?
 ALGORITHM = 'HS256'
 
-users = {}
+users = []
 
+@dataclass
+class User:
+    """Класс пользователя."""
+    login: str
+    hashed_password: str
+    token: str
 
 class Authentication:
     """Класс аутентификации пользователя."""
@@ -15,10 +21,12 @@ class Authentication:
         """Регистрация пользователя."""
         payload = {'user_login': login, 'password': password}
         token = jwt.encode(payload, SECRET_KEY, ALGORITHM)
-        users[login] = token
-        return token
+        hashed_password = hash(password)
+        user = User(login, hashed_password, token)
+        users.append(user)
+        return User
 
-    def authorisation(self, login: str, password: str) -> str:
+    def authorisation(self, login: str, password: str) -> Union[str, bool]:
         """Авторизация пользователя."""
         try:
             if login in users:
@@ -27,4 +35,12 @@ class Authentication:
                 if users.get(login, token) == token:
                     return token
         except jwt.PyJWTError:
-            return None
+            return False
+
+    def validate(self, login: str, token: str) -> bool:
+        """Проверка токена на валидность."""
+        for user in users:
+            if user.login == login:
+                if user.token == token:
+                    return True
+            return False

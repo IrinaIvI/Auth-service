@@ -2,7 +2,7 @@ version: '3'
 
 services:
   app:
-    container_name: 'auth-service'
+    container_name: 'auth_service_ivashko'
     build:
       context: app/
       dockerfile: Dockerfile
