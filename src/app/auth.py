@@ -33,7 +33,7 @@ class Authentication:
             for user in users:
                 if user.login == login and user.hashed_password == hash(password):
                     return user.token
-        except jwt.PyJWTError:
+        except jwt.PyJWTError: # подумать над реализацией (на выходе null, а должно быть false или "такого пользователя нет")
             return False
 
     def validate(self, login: str, token: str) -> bool:
