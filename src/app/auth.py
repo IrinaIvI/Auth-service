@@ -2,6 +2,7 @@ import os
 from dataclasses import dataclass
 import jwt
 from typing import Union
+from fastapi import HTTPException
 SECRET_KEY = str(os.environ.get('SECRET_KEY')) # переделать под yaml?
 ALGORITHM = 'HS256'
 
@@ -18,7 +19,7 @@ class User:
 class Authentication:
     """Класс аутентификации пользователя."""
 
-    def registration(self, login: str, password: str) -> str:
+    def registration(self, login: str, password: str) -> User:
         """Регистрация пользователя."""
         payload = {'user_login': login, 'password': password}
         token = jwt.encode(payload, SECRET_KEY, ALGORITHM)
@@ -33,14 +34,13 @@ class Authentication:
             for user in users:
                 if user.login == login and user.hashed_password == hash(password):
                     return user.token
-        except jwt.PyJWTError: # подумать над реализацией (на выходе null, а должно быть false или "такого пользователя нет")
-            return False
+        except jwt.PyJWTError:
+            return None
 
-    def validate(self, login: str, token: str) -> bool:
+    def validate(self, token: str) -> bool:
         """Проверка токена на валидность."""
         for user in users:
-            if user.login == login:
-                if user.token == token:
-                    return True
-            return False
+            if user.token == token:
+                raise HTTPException(status_code=200, detail='OK')
+        raise HTTPException(status_code=401, detail='Unauthorised')
 

@@ -11,7 +11,7 @@ services:
       - ${SSH_KEY_PATH}/id_rsa:/root/.ssh/id_rsa
       - ${SSH_KEY_PATH}/id_rsa.pub:/root/.ssh/id_rsa.pub
     ports:
-      - '28080:8080'
+      - '28081:8081'
     command: sleep infinity
     cap_add:
       - SYS_PTRACE
@@ -19,3 +19,4 @@ services:
       - seccomp:unconfined
     environment:
       - PYTHONPATH=/workspace/src
+

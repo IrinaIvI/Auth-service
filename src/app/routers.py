@@ -1,20 +1,21 @@
 from fastapi import APIRouter, Depends
-from typing import Annotated, Union
+from typing import Annotated
 
-from app.auth import Authentication, User
+from app.auth import Authentication
 
 router = APIRouter(
     prefix="/auth_service",
 )
 
-@router.post('/registration')
+@router.get('/registration')
 def registration(user: Annotated[str, str, Depends(Authentication().registration)]):
     return user
 
-@router.get('/authorisation')
+@router.post('/authorisation')
 def authorisation(token: Annotated[str, str, Depends(Authentication().authorisation)]):
     return token
 
 @router.get('/validate')
-def validate(result: Annotated[str, str, Depends(Authentication().validate)]):
+def validate(result: Annotated[str, Depends(Authentication().validate)]):
     return result
+
