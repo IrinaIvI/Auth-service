@@ -1,12 +1,15 @@
-import os
 from dataclasses import dataclass
-import jwt
-from typing import Union
 from fastapi import HTTPException
-SECRET_KEY = str(os.environ.get('SECRET_KEY')) # переделать под yaml?
+import jwt
+import os
+from typing import Union
+
+
+SECRET_KEY = str(os.environ.get('SECRET_KEY'))
 ALGORITHM = 'HS256'
 
 users = []
+
 
 @dataclass
 class User:
@@ -15,6 +18,7 @@ class User:
     login: str
     hashed_password: str
     token: str
+
 
 class Authentication:
     """Класс аутентификации пользователя."""
@@ -43,4 +47,3 @@ class Authentication:
             if user.token == token:
                 raise HTTPException(status_code=200, detail='OK')
         raise HTTPException(status_code=401, detail='Unauthorised')
-

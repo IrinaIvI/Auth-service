@@ -4,7 +4,7 @@ from typing import Annotated
 from app.auth import Authentication
 
 router = APIRouter(
-    prefix="/auth_service",
+    prefix='/auth_service',
 )
 
 @router.get('/registration')
