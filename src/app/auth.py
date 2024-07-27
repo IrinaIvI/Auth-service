@@ -6,7 +6,6 @@ ALGORITHM = 'HS256'
 
 users = {}
 
-
 class Authentication:
     """Класс аутентификации пользователя."""
 
