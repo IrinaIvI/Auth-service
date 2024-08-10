@@ -27,14 +27,13 @@ class Authentication:
         """Регистрация пользователя."""
         if not login.strip() or not password.strip():
             return 'Неправильно введены данные'
-        else:
-            payload = {'user_login': login, 'password': password}
-            token = jwt.encode(payload, SECRET_KEY, ALGORITHM)
-            hashed_password = hash(password)
-            user = User(login, hashed_password, token)
-            users.append(user)
-            return user
 
+        payload = {'user_login': login, 'password': password}
+        token = jwt.encode(payload, SECRET_KEY, ALGORITHM)
+        hashed_password = hash(password)
+        user = User(login, hashed_password, token)
+        users.append(user)
+        return user
 
     def authorisation(self, login: str, password: str) -> Union[str, bool]:
         """Авторизация пользователя."""
@@ -48,12 +47,10 @@ class Authentication:
             except jwt.PyJWTError:
                 return None
 
-
-    def validate(self, id: int, token: str) -> bool:
+    def validate(self, user_id: int, token: str) -> bool:
         """Проверка токена на валидность."""
         for user in users:
-            if user.id == id:
+            if user.id == user_id:
                 if user.token == token:
                     raise HTTPException(status_code=200, detail='OK')
             raise HTTPException(status_code=401, detail='Unauthorised')
-
