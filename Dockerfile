@@ -2,7 +2,7 @@ FROM debian:bookworm-slim
 
 LABEL maintainer="ira.ivashko.99@gmail.com"
 
-WORKDIR /app
+WORKDIR /src/app
 
 ENV POETRY_VERSION=1.8.3
 ENV PATH="/root/.local/bin:${PATH}"
@@ -19,6 +19,6 @@ COPY poetry.lock pyproject.toml ./
 
 RUN poetry install --no-interaction --no-ansi -vvv
 
-COPY . ./src
+COPY . .
 
 ENTRYPOINT ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
