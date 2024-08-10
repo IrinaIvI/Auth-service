@@ -28,6 +28,3 @@ def test_authorisation(login, password):
     Authentication().registration('mike', 'superboss')
     token = jwt.encode({'user_login': login, 'password': password}, SECRET_KEY, ALGORITHM)
     assert Authentication().authorisation(login, password) == token
-
-
-
