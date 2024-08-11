@@ -1,30 +1,49 @@
-import os
-
+from dataclasses import dataclass
+from fastapi import HTTPException
 import jwt
+import os
+from typing import Union
+
 
 SECRET_KEY = str(os.environ.get('SECRET_KEY'))
 ALGORITHM = 'HS256'
 
-users = {}
+users = []
+
+
+@dataclass
+class User:
+    """Класс пользователя."""
+
+    login: str
+    hashed_password: str
+    token: str
 
 
 class Authentication:
     """Класс аутентификации пользователя."""
 
-    def registration(self, login: str, password: str) -> str:
+    def registration(self, login: str, password: str) -> User:
         """Регистрация пользователя."""
         payload = {'user_login': login, 'password': password}
         token = jwt.encode(payload, SECRET_KEY, ALGORITHM)
-        users[login] = token
-        return token
+        hashed_password = hash(password)
+        user = User(login, hashed_password, token)
+        users.append(user)
+        return user
 
-    def authorisation(self, login: str, password: str) -> str:
+    def authorisation(self, login: str, password: str) -> Union[str, bool]:
         """Авторизация пользователя."""
         try:
-            if login in users:
-                payload = {'user_login': login, 'password': password}
-                token = jwt.encode(payload, SECRET_KEY, ALGORITHM)
-                if users.get(login, token) == token:
-                    return token
+            for user in users:
+                if user.login == login and user.hashed_password == hash(password):
+                    return user.token
         except jwt.PyJWTError:
             return None
+
+    def validate(self, token: str) -> bool:
+        """Проверка токена на валидность."""
+        for user in users:
+            if user.token == token:
+                raise HTTPException(status_code=200, detail='OK')
+        raise HTTPException(status_code=401, detail='Unauthorised')

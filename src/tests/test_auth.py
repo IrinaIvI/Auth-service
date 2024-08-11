@@ -1,4 +1,4 @@
-from app.auth import Authentication, SECRET_KEY, ALGORITHM, users
+from app.auth import Authentication, SECRET_KEY, ALGORITHM, users, User
 import pytest
 import jwt
 
@@ -10,9 +10,12 @@ import jwt
     pytest.param('', '', id='is not correct', marks=pytest.mark.xfail()),
 ])
 def test_registration(login, password):
-    Authentication().registration(login, password)
-    token = jwt.encode({'user_login': login, 'password': password}, SECRET_KEY, ALGORITHM)
-    assert users[login] == token
+    current_user = Authentication().registration(login, password)
+    payload = {'user_login': login, 'password': password}
+    token = jwt.encode(payload, SECRET_KEY, ALGORITHM)
+    hashed_password = hash(password)
+    user = User(login, hashed_password, token)
+    assert user == current_user
 
 @pytest.mark.parametrize('login, password', [
     pytest.param('mike', 'superboss', id='is correct'),
