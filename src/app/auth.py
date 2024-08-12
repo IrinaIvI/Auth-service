@@ -108,34 +108,3 @@ class Authentication:
                     raise HTTPException(status_code=200, detail='OK')
             raise HTTPException(status_code=401, detail='Unauthorised')
 
-async def verify(self, user_id: int, photo: UploadFile) -> dict:
-        """Сохраняет фото на диск, отправляет сообщение в Kafka и обновляет статус пользователя."""
-        # Генерация уникального имени файла для сохранения
-        photo_filename = f"{uuid.uuid4()}.jpg"
-        photo_path = os.path.join('photos', photo_filename)
-
-        # Сохраняем фото на диск
-        try:
-            with open(photo_path, "wb") as buffer:
-                shutil.copyfileobj(photo.file, buffer)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Ошибка при сохранении фото: {e}")
-
-        # Отправка сообщения в Kafka
-        message = {
-            'user_id': user_id,
-            'photo_path': photo_path
-        }
-        await self.producer.send(KAFKA_TOPIC, key=str(user_id), value=str(message))
-
-        # Обновление статуса пользователя
-        user = self.user_storage.get_user(user_id)
-        if user:
-            user.verified = True
-            self.user_storage.update_user(user)
-        else:
-            new_user = User(id=user_id, verified=True)
-            self.user_storage.add_user(new_user)
-
-        return {"status": "accepted", "photo_path": photo_path}
-
