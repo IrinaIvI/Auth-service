@@ -7,13 +7,11 @@ import uuid
 from fastapi import UploadFile
 import os
 import shutil
-# from app.producer import Producer
+from app.producer import Producer, KAFKA_TOPIC
 
 
 SECRET_KEY = str(os.environ.get('SECRET_KEY'))
 ALGORITHM = 'HS256'
-KAFKA_BROKER = os.environ.get('KAFKA_BROKER', 'localhost:9092')
-KAFKA_TOPIC = 'face_verification'
 
 users = []
 
@@ -29,9 +27,8 @@ class User:
 class Authentication:
     """Класс аутентификации пользователя."""
 
-    # def __init__(self):
-    #     self.producer = Producer()
-
+    def __init__(self):
+        self.producer = Producer()
 
     async def verify(self, user_id: int, photo: UploadFile) -> dict:
         """Сохраняет фото на диск и отправляет сообщение в Kafka."""
@@ -60,21 +57,19 @@ class Authentication:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ошибка при сохранении фото: {e}")
 
-        return {"status": "accepted", "photo_path": photo_path}
-
-
-        # # Отправка сообщения в Kafka
-        # try:
-        #     await self.producer.start()
-        #     message = {
-        #         'user_id': user_id,
-        #         'photo_path': photo_path
-        #     }
-        #     await self.producer.send(KAFKA_TOPIC, key=str(user_id), value=str(message))
-        # except Exception as e:
-        #     raise HTTPException(status_code=500, detail=f"Ошибка при отправке сообщения в Kafka: {e}")
-        # finally:
-        #     await self.producer.stop()
+        # Отправка сообщения в Kafka
+        try:
+            await self.producer.start()
+            message = {
+                'user_id': user_id,
+                'photo_path': photo_path
+            }
+            await self.producer.send(KAFKA_TOPIC, key=str(user_id), value=str(message))
+            return {'message': f'Сообщение {message} было отправлено'}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка при отправке сообщения в Kafka: {e}")
+        finally:
+            await self.producer.stop()
 
 
 
