@@ -35,9 +35,8 @@ class Authentication:
 
     async def verify(self, user_id: int, photo: UploadFile) -> dict:
         """Сохраняет фото на диск и отправляет сообщение в Kafka."""
-        # Определение пути к директории photos в корневой папке проекта
-        base_directory = os.getcwd()
-        photo_directory = os.path.join(base_directory, 'photos')
+        # Указываем путь к директории photos в контейнере
+        photo_directory = '/photos'
 
         # Получение имени файла из UploadFile
         photo_filename = photo.filename  # Получение оригинального имени файла
@@ -55,8 +54,9 @@ class Authentication:
         # Сохранение фото на диск
         try:
             with open(photo_path, "wb") as buffer:
-                content = await photo.read()  # Чтение содержимого загруженного файла
-                buffer.write(content)         # Запись содержимого в файл на диске
+                content = await photo.read()
+                buffer.write(content)
+                buffer.flush()  # Принудительно сбрасываем буфер, чтобы записать данные на диск
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ошибка при сохранении фото: {e}")
 
@@ -76,7 +76,7 @@ class Authentication:
         # finally:
         #     await self.producer.stop()
 
-        # return {"status": "accepted", "photo_path": photo_path}
+
 
     def registration(self, login: str, password: str) -> User:
         """Регистрация пользователя."""
