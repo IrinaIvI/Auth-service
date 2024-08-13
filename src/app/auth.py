@@ -1,12 +1,13 @@
 from dataclasses import dataclass
-from fastapi import HTTPException, UploadFile
-from aiokafka import AIOKafkaProducer
-import asyncio
+from fastapi import HTTPException
 import jwt
 import os
 from typing import Union
-import shutil
 import uuid
+from fastapi import UploadFile
+import os
+import shutil
+# from app.producer import Producer
 
 
 SECRET_KEY = str(os.environ.get('SECRET_KEY'))
@@ -15,29 +16,6 @@ KAFKA_BROKER = os.environ.get('KAFKA_BROKER', 'localhost:9092')
 KAFKA_TOPIC = 'face_verification'
 
 users = []
-
-
-class Producer:
-    """Класс для отправки сообщений в Kafka с использованием aiokafka."""
-
-    def __init__(self):
-        self.producer = AIOKafkaProducer(bootstrap_servers=KAFKA_BROKER)
-
-    async def start(self):
-        """Запускает продюсер."""
-        await self.producer.start()
-
-    async def stop(self):
-        """Останавливает продюсер."""
-        await self.producer.stop()
-
-    async def send(self, topic: str, key: str, value: str):
-        """Отправляет сообщение в Kafka."""
-        try:
-            await self.producer.send_and_wait(topic, key=key.encode(), value=value.encode())
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Ошибка при отправке сообщения в Kafka: {e}")
-
 
 @dataclass
 class User:
@@ -51,31 +29,55 @@ class User:
 class Authentication:
     """Класс аутентификации пользователя."""
 
-    def __init__(self):
-        self.producer = Producer()
+    # def __init__(self):
+    #     self.producer = Producer()
 
 
     async def verify(self, user_id: int, photo: UploadFile) -> dict:
         """Сохраняет фото на диск и отправляет сообщение в Kafka."""
-        # Генерация уникального имени файла для сохранения
-        photo_filename = f"{uuid.uuid4()}.jpg"
-        photo_path = os.path.join('photos', photo_filename)
+        # Определение пути к директории photos в корневой папке проекта
+        base_directory = os.getcwd()
+        photo_directory = os.path.join(base_directory, 'photos')
 
-        # Сохраняем фото на диск
+        # Получение имени файла из UploadFile
+        photo_filename = photo.filename  # Получение оригинального имени файла
+
+        if not photo_filename:
+            raise HTTPException(status_code=400, detail="Имя файла отсутствует")
+
+        # Создание полного пути к файлу с оригинальным именем
+        photo_path = os.path.join(photo_directory, photo_filename)
+
+        # Проверяем, существует ли директория, и создаем её, если нет
+        if not os.path.exists(photo_directory):
+            os.makedirs(photo_directory)
+
+        # Сохранение фото на диск
         try:
             with open(photo_path, "wb") as buffer:
-                shutil.copyfileobj(photo.file, buffer)
+                content = await photo.read()  # Чтение содержимого загруженного файла
+                buffer.write(content)         # Запись содержимого в файл на диске
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ошибка при сохранении фото: {e}")
 
-        # Отправка сообщения в Kafka
-        message = {
-            'user_id': user_id,
-            'photo_path': photo_path
-        }
-        await self.producer.send(KAFKA_TOPIC, key=str(user_id), value=str(message))
-
         return {"status": "accepted", "photo_path": photo_path}
+
+
+        # # Отправка сообщения в Kafka
+        # try:
+        #     await self.producer.start()
+        #     message = {
+        #         'user_id': user_id,
+        #         'photo_path': photo_path
+        #     }
+        #     await self.producer.send(KAFKA_TOPIC, key=str(user_id), value=str(message))
+        # except Exception as e:
+        #     raise HTTPException(status_code=500, detail=f"Ошибка при отправке сообщения в Kafka: {e}")
+        # finally:
+        #     await self.producer.stop()
+
+        # return {"status": "accepted", "photo_path": photo_path}
+
     def registration(self, login: str, password: str) -> User:
         """Регистрация пользователя."""
         if not login.strip() or not password.strip():
@@ -100,11 +102,10 @@ class Authentication:
             except jwt.PyJWTError:
                 return None
 
-    def validate(self, user_id: int, token: str) -> bool:
+    def validate(self, token: str) -> bool:
         """Проверка токена на валидность."""
         for user in users:
-            if user.id == user_id:
                 if user.token == token:
                     raise HTTPException(status_code=200, detail='OK')
-            raise HTTPException(status_code=401, detail='Unauthorised')
+        raise HTTPException(status_code=401, detail='Unauthorised')
 
