@@ -5,6 +5,7 @@ import os
 from typing import Union
 from fastapi import UploadFile, File
 import os
+import json
 from app.producer import Producer, KAFKA_TOPIC
 
 SECRET_KEY = str(os.environ.get('SECRET_KEY'))
@@ -56,7 +57,7 @@ class Authentication:
                 'user_id': user_id,
                 'photo_path': photo_path
             }
-            await self.producer.send(KAFKA_TOPIC, key=str(user_id), value=str(message))
+            await self.producer.send(KAFKA_TOPIC, key=json.dumps(user_id), value=message)
             return {'message': f'Сообщение {message} было отправлено'}
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ошибка при отправке сообщения в Kafka: {e}")
