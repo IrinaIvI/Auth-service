@@ -3,12 +3,9 @@ from fastapi import HTTPException
 import jwt
 import os
 from typing import Union
-import uuid
-from fastapi import UploadFile
+from fastapi import UploadFile, File
 import os
-import shutil
 from app.producer import Producer, KAFKA_TOPIC
-
 
 SECRET_KEY = str(os.environ.get('SECRET_KEY'))
 ALGORITHM = 'HS256'
@@ -22,6 +19,7 @@ class User:
     login: str
     hashed_password: str
     token: str
+    verified: bool = False
 
 
 class Authentication:
@@ -30,24 +28,19 @@ class Authentication:
     def __init__(self):
         self.producer = Producer()
 
-    async def verify(self, user_id: int, photo: UploadFile) -> dict:
+    async def verify(self, user_id: int, photo: UploadFile = File(...)) -> dict:
         """Сохраняет фото на диск и отправляет сообщение в Kafka."""
         # Указываем путь к директории photos в контейнере
         photo_directory = '/photos'
-
         # Получение имени файла из UploadFile
         photo_filename = photo.filename  # Получение оригинального имени файла
-
         if not photo_filename:
             raise HTTPException(status_code=400, detail="Имя файла отсутствует")
-
         # Создание полного пути к файлу с оригинальным именем
         photo_path = os.path.join(photo_directory, photo_filename)
-
         # Проверяем, существует ли директория, и создаем её, если нет
         if not os.path.exists(photo_directory):
             os.makedirs(photo_directory)
-
         # Сохранение фото на диск
         try:
             with open(photo_path, "wb") as buffer:
@@ -56,7 +49,6 @@ class Authentication:
                 buffer.flush()  # Принудительно сбрасываем буфер, чтобы записать данные на диск
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ошибка при сохранении фото: {e}")
-
         # Отправка сообщения в Kafka
         try:
             await self.producer.start()
@@ -70,8 +62,6 @@ class Authentication:
             raise HTTPException(status_code=500, detail=f"Ошибка при отправке сообщения в Kafka: {e}")
         finally:
             await self.producer.stop()
-
-
 
     def registration(self, login: str, password: str) -> User:
         """Регистрация пользователя."""
@@ -97,7 +87,7 @@ class Authentication:
             except jwt.PyJWTError:
                 return None
 
-    def validate(self, token: str) -> bool:
+    def validate(self, token: str):
         """Проверка токена на валидность."""
         for user in users:
                 if user.token == token:

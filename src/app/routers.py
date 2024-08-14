@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile
+from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi.responses import JSONResponse
 from typing import Annotated
 
@@ -26,11 +26,12 @@ async def health_check():
     return JSONResponse(status_code=200, content={"message": "success"})
 
 @router.post('/verify')
-async def verify(user_id: int, photo: UploadFile):
+async def verify(user_id: int, photo: UploadFile = File(...)):
     auth = Authentication()
     await auth.producer.start()
     try:
         result = await auth.verify(user_id, photo)
     finally:
         await auth.producer.stop()
-    return JSONResponse(content=result)
+    return result
+
