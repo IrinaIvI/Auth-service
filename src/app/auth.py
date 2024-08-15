@@ -31,26 +31,20 @@ class Authentication:
 
     async def verify(self, user_id: int, photo: UploadFile = File(...)) -> dict:
         """Сохраняет фото на диск и отправляет сообщение в Kafka."""
-        # Указываем путь к директории photos в контейнере
         photo_directory = '/photos'
-        # Получение имени файла из UploadFile
-        photo_filename = photo.filename  # Получение оригинального имени файла
+        photo_filename = photo.filename
         if not photo_filename:
             raise HTTPException(status_code=400, detail="Имя файла отсутствует")
-        # Создание полного пути к файлу с оригинальным именем
         photo_path = os.path.join(photo_directory, photo_filename)
-        # Проверяем, существует ли директория, и создаем её, если нет
         if not os.path.exists(photo_directory):
             os.makedirs(photo_directory)
-        # Сохранение фото на диск
         try:
             with open(photo_path, "wb") as buffer:
                 content = await photo.read()
                 buffer.write(content)
-                buffer.flush()  # Принудительно сбрасываем буфер, чтобы записать данные на диск
+                buffer.flush()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ошибка при сохранении фото: {e}")
-        # Отправка сообщения в Kafka
         try:
             await self.producer.start()
             message = {
