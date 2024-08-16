@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
     login = Column(String, unique=True, nullable=False)
@@ -19,7 +19,7 @@ class User(Base):
     face_data = relationship("UserFaceData", back_populates="user")
 
 class UserToken(Base):
-    __tablename__ = "user_token"
+    __tablename__ = "usertoken"
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('user.id'))
