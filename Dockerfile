@@ -9,8 +9,7 @@ ENV PATH="/root/.local/bin:${PATH}"
 
 # Установка системных зависимостей
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip python3-venv curl && \
-    apt-get update && apt-get install -y telnet && \
+    apt-get install -y python3 python3-pip python3-venv curl libpq-dev gcc python3-dev && \
     curl -sSL https://install.python-poetry.org | POETRY_VERSION=${POETRY_VERSION} python3 - && \
     /root/.local/bin/poetry --version
 
