@@ -13,10 +13,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 # access to the values within the .ini file in use.
 config = context.config
 
-database_url = "postgresql+psycopg2://postgres:password@localhost:5433/card_app"
+database_url = "postgresql+psycopg2://postgres:password@postgres:5432/card_app"
 try:
     # Пробуем декодировать строку
-    database_url = "postgresql+psycopg2://postgres:password@localhost:5433/card_app"
+    database_url = "postgresql+psycopg2://postgres:password@postgres:5432/card_app"
     print(database_url.encode('utf-8').decode('utf-8'))
 except UnicodeDecodeError as e:
     print(f"Ошибка декодирования: {e}")
@@ -80,7 +80,10 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            include_schemas=True,  # Включаем поддержку схем
+            version_table_schema='auth_schema_ivashko'
         )
 
         with context.begin_transaction():

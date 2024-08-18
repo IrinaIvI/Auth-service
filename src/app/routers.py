@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi.responses import JSONResponse
 from typing import Annotated
-
+from app.schemas import UserScheme
 from app.auth import Authentication
 
 router = APIRouter(
