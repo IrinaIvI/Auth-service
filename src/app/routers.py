@@ -1,23 +1,23 @@
 from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi.responses import JSONResponse
 from typing import Annotated
-from app.schemas import UserScheme
+from app.schemas import UserScheme, TokenScheme
 from app.auth import Authentication
 
 router = APIRouter(
     prefix='/auth_service',
 )
 
-@router.get('/registration')
+@router.post('/registration', response_model=UserScheme)
 def registration(user: Annotated[str, str, Depends(Authentication().registration)]):
     return user
 
-@router.post('/authorisation')
+@router.post('/authorisation', response_model=TokenScheme)
 def authorisation(token: Annotated[str, str, Depends(Authentication().authorisation)]):
     return token
 
 @router.get('/validate')
-def validate(result: Annotated[str, Depends(Authentication().validate)]):
+def validate(result: Annotated[int, str, Depends(Authentication().validate)]):
     return result
 
 

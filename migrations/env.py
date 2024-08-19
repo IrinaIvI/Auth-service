@@ -1,7 +1,7 @@
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import pool, text
 
 from alembic import context
 import os
@@ -12,18 +12,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-
-database_url = "postgresql+psycopg2://postgres:password@postgres:5432/card_app"
-try:
-    # Пробуем декодировать строку
-    database_url = "postgresql+psycopg2://postgres:password@postgres:5432/card_app"
-    print(database_url.encode('utf-8').decode('utf-8'))
-except UnicodeDecodeError as e:
-    print(f"Ошибка декодирования: {e}")
-
-if not database_url:
-    raise ValueError("DATABASE_URL environment variable not set or is empty")
-config.set_main_option("sqlalchemy.url", database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -79,10 +67,11 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            include_schemas=True,  # Включаем поддержку схем
+            include_schemas=True,
             version_table_schema='auth_schema_ivashko'
         )
 
