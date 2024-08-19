@@ -6,7 +6,6 @@ Base = declarative_base(metadata=metadata)
 
 class User(Base):
     __tablename__ = "users_ivashko"
-    __table_args__ = {"schema": "auth_schema_ivashko"}
 
     id = Column(Integer, primary_key=True)
     login = Column(String, unique=True, nullable=False)
@@ -18,7 +17,6 @@ class User(Base):
 
 class UserToken(Base):
     __tablename__ = "usertoken_ivashko"
-    __table_args__ = {"schema": "auth_schema_ivashko"}
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('auth_schema_ivashko.users_ivashko.id'))
