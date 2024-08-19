@@ -9,7 +9,7 @@ class User(Base):
     __table_args__ = {"schema": "auth_schema_ivashko"}
 
     id = Column(Integer, primary_key=True)
-    login = Column(String, nullable=False) #, unique=True,
+    login = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
     verified = Column(Boolean, default=False)
     created_at = Column(TIMESTAMP, nullable=True, default=None)

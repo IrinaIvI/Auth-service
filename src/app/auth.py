@@ -94,18 +94,14 @@ class Authentication:
 
                 if existing_token:
                     if existing_token.expiration_at > now:
-                        # Токен еще действителен
                         return TokenScheme(token=existing_token.token)
                     else:
-                        # Токен истек, удаляем старый
                         logging.info(f"Токен истек для пользователя {user.login}: {existing_token.token}")
                         db.query(UserToken).filter(UserToken.id == existing_token.id).update({
                             UserToken.is_valid: False,
                             UserToken.updated_at: now
                         })
                         db.commit()
-
-                # Создаем новый токен
                 access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
                 new_token = self.create_access_token(
                     data={"sub": user.login}, expires_delta=access_token_expires
@@ -133,15 +129,15 @@ class Authentication:
             logging.error(f"JWT ошибка: {e}")
             raise HTTPException(status_code=500, detail="Ошибка в обработке токена")
 
-    def validate(self, id: int, token: str, db: Annotated[Session, Depends(get_db)]):
+    def validate(self, user_id: int, token: str, db: Annotated[Session, Depends(get_db)]):
         """Проверка токена на валидность."""
-        user = db.query(User).filter(User.id == id).first()
+        user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         user_token = db.query(UserToken).filter(UserToken.user_id == user.id, UserToken.token == token).first()
         if user_token and user_token.is_valid:
-            return {"status": 200, "detail": "OK"}
-        return  {"status": 401, "detail": "Unauthorised"}
+            return {'status': 200, 'detail': 'OK'}
+        return  {'status': 401, 'detail': 'Unauthorised'}
 
     async def verify(self, user_id: int, photo: UploadFile = File(...)) -> dict:
         """Сохраняет фото на диск и отправляет сообщение в Kafka."""

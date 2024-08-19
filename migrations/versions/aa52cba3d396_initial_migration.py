@@ -28,6 +28,7 @@ def upgrade() -> None:
     sa.Column('created_at', sa.TIMESTAMP(), nullable=True),
     sa.Column('updated_at', sa.TIMESTAMP(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('login'),
     schema='auth_schema_ivashko'
     )
     op.create_table('usertoken_ivashko',
