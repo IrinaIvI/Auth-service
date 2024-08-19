@@ -67,6 +67,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        connection.execute(text("CREATE SCHEMA IF NOT EXISTS auth_schema_ivashko"))
 
         context.configure(
             connection=connection,

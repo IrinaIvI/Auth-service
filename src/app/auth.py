@@ -1,6 +1,7 @@
 #from dataclasses import dataclass
-from fastapi import Depends, HTTPException,  UploadFile, File, status
+from fastapi import Depends, HTTPException,  UploadFile, File
 from sqlalchemy.orm import Session
+from typing import Annotated
 from sqlalchemy import text
 import jwt
 import os
@@ -10,7 +11,6 @@ from app.producer import Producer, KAFKA_TOPIC
 from app.schemas import UserScheme, TokenScheme
 from datetime import datetime, timedelta
 from app.models import User, UserToken
-from typing import Annotated
 from sqlalchemy.exc import NoResultFound
 from passlib.context import CryptContext
 import logging
@@ -80,36 +80,51 @@ class Authentication:
         """Авторизация пользователя."""
         if not login.strip() or not password.strip():
             raise HTTPException(status_code=400, detail="Неправильно введены данные")
+
         try:
             user = db.query(User).filter(User.login == login).one()
             logging.info(f"Найден пользователь: {user}")
+
             if self.verify_password(password, user.password):
                 existing_token = db.query(UserToken).filter(
                     UserToken.user_id == user.id,
-                    UserToken.is_valid == True,
-                    UserToken.expiration_at > datetime.now()
-                ).first()
+                    UserToken.is_valid == True).first()
+
+                now = datetime.now()
+
                 if existing_token:
-                    logging.info(f"Найден существующий токен для пользователя {user.login}: {existing_token.token}")
-                    return TokenScheme(token=existing_token.token)
+                    if existing_token.expiration_at > now:
+                        # Токен еще действителен
+                        return TokenScheme(token=existing_token.token)
+                    else:
+                        # Токен истек, удаляем старый
+                        logging.info(f"Токен истек для пользователя {user.login}: {existing_token.token}")
+                        db.query(UserToken).filter(UserToken.id == existing_token.id).update({
+                            UserToken.is_valid: False,
+                            UserToken.updated_at: now
+                        })
+                        db.commit()
+
+                # Создаем новый токен
                 access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-                token = self.create_access_token(
+                new_token = self.create_access_token(
                     data={"sub": user.login}, expires_delta=access_token_expires
                 )
+
                 sql = text("""
                     INSERT INTO auth_schema_ivashko.usertoken_ivashko (user_id, token, is_valid, expiration_at, updated_at)
                     VALUES (:user_id, :token, :is_valid, :expiration_at, :updated_at)
                     RETURNING token;
                 """)
-                db.execute(sql, {
+                result = db.execute(sql, {
                     'user_id': user.id,
-                    'token': token,
+                    'token': new_token,
                     'is_valid': True,
-                    'expiration_at': datetime.now() + access_token_expires,
-                    'updated_at': datetime.now()
+                    'expiration_at': now + access_token_expires,
+                    'updated_at': now
                 })
                 db.commit()
-                return TokenScheme(token=token)
+                return TokenScheme(token=new_token)
             else:
                 raise HTTPException(status_code=401, detail="Неверный пароль")
         except NoResultFound:
