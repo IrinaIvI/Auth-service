@@ -15,14 +15,12 @@ RUN apt-get update && \
 
 RUN poetry config virtualenvs.create true
 
-COPY poetry.lock pyproject.toml ./
+COPY ./auth/poetry.lock  ./auth/pyproject.toml /app/
+RUN poetry install --no-interaction --no-ansi
 
-RUN poetry install --no-interaction --no-ansi -vvv
+COPY ./auth/src /app/src
+COPY ./common_base.py /app/common_base.py
 
-COPY ./src /app
-
-COPY alembic.ini ./
-COPY migrations/ /app/migrations
-RUN poetry run alembic upgrade head
+ENV PYTHONPATH=/app/src
 
 ENTRYPOINT ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

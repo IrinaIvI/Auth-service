@@ -1,6 +1,12 @@
 from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, ForeignKey
-#from sqlalchemy.orm import relationship
-from ....common_base import Base
+#from sqlalchemy.orm import relatio
+#from ....common_base import Base
+
+import os
+import sys
+
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
+from common_base import Base
 
 class User(Base):
     __tablename__ = "users_ivashko"

@@ -45,13 +45,15 @@ class Authentication:
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
 
-    def registration(self, login: str, password: str, db: Annotated[Session, Depends(get_db)]):
+    def registration(self, login: str, password: str, db: Annotated[Session, Depends(get_db)]) -> UserScheme:
         """Регистрация пользователя."""
         if not login.strip() or not password.strip():
             raise HTTPException(status_code=400, detail='Неправильно введены данные')
         hashed_password = pwd_context.hash(password)
+        if db.query(User).filter(login, password):
+            raise HTTPException(status_code=400, detail='Такой пользователь уже существует')
         sql = text("""
-            INSERT INTO auth_schema_ivashko.users_ivashko (login, password, verified, created_at, updated_at)
+            INSERT INTO ivashko_schema.users_ivashko (login, password, verified, created_at, updated_at)
             VALUES (:login, :password, :verified, :created_at, :updated_at)
             RETURNING id, login, password, verified, created_at, updated_at;
         """)
@@ -108,7 +110,7 @@ class Authentication:
                 )
 
                 sql = text("""
-                    INSERT INTO auth_schema_ivashko.usertoken_ivashko (user_id, token, is_valid, expiration_at, updated_at)
+                    INSERT INTO ivashko_schema.usertoken_ivashko (user_id, token, is_valid, expiration_at, updated_at)
                     VALUES (:user_id, :token, :is_valid, :expiration_at, :updated_at)
                     RETURNING token;
                 """)
