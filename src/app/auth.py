@@ -14,6 +14,7 @@ from app.models import User, UserToken
 from sqlalchemy.exc import NoResultFound
 from passlib.context import CryptContext
 import logging
+from fastapi.responses import JSONResponse
 
 logging.basicConfig(level=logging.INFO)
 
@@ -138,8 +139,8 @@ class Authentication:
             raise HTTPException(status_code=404, detail="User not found")
         user_token = db.query(UserToken).filter(UserToken.user_id == user.id, UserToken.token == token).first()
         if user_token and user_token.is_valid:
-            return {'status': 200, 'detail': 'OK'}
-        return  {'status': 401, 'detail': 'Unauthorised'}
+            return JSONResponse(content="OK", status_code=200)
+        return  JSONResponse(content="Unauthorised", status_code=401)
 
     async def verify(self, user_id: int, photo: UploadFile = File(...)) -> dict:
         """Сохраняет фото на диск и отправляет сообщение в Kafka."""
