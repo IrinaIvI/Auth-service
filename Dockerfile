@@ -21,4 +21,8 @@ RUN poetry install --no-interaction --no-ansi -vvv
 
 COPY ./src /app
 
+COPY alembic.ini ./
+COPY migrations/ /app/migrations
+RUN poetry run alembic upgrade head
+
 ENTRYPOINT ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
