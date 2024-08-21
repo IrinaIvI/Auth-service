@@ -51,7 +51,8 @@ class Authentication:
         if not login.strip() or not password.strip():
             raise HTTPException(status_code=400, detail='Неправильно введены данные')
         hashed_password = pwd_context.hash(password)
-        if db.query(User).filter(login, password):
+        existing_user = db.query(User).filter(User.login == login).first()
+        if existing_user:
             raise HTTPException(status_code=400, detail='Такой пользователь уже существует')
         sql = text("""
             INSERT INTO ivashko_schema.users_ivashko (login, password, verified, created_at, updated_at)
@@ -139,37 +140,43 @@ class Authentication:
             raise HTTPException(status_code=404, detail="User not found")
         user_token = db.query(UserToken).filter(UserToken.user_id == user.id, UserToken.token == token).first()
         if user_token and user_token.is_valid:
-            return JSONResponse(content="OK", status_code=200)
-        return  JSONResponse(content="Unauthorised", status_code=401)
+            return {'status': 200, 'detail': 'OK'}
+        return  {'status': 401, 'detail': 'Unauthorised'}
 
     async def verify(self, user_id: int, photo: UploadFile = File(...)) -> dict:
         """Сохраняет фото на диск и отправляет сообщение в Kafka."""
-        photo_directory = '/photos'
-        photo_filename = photo.filename
-        if not photo_filename:
-            raise HTTPException(status_code=400, detail="Имя файла отсутствует")
-        photo_path = os.path.join(photo_directory, photo_filename)
+        current_directory = os.getcwd()
+        logging.info(f"Текущая рабочая директория: {current_directory}")
+        photo_directory = '/app/photos'
         if not os.path.exists(photo_directory):
+            logging.info("Создание папки по пути")
             os.makedirs(photo_directory)
-        try:
-            with open(photo_path, "wb") as buffer:
-                content = await photo.read()
-                buffer.write(content)
-                buffer.flush()
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Ошибка при сохранении фото: {e}")
-        try:
-            await self.producer.start()
-            message = {
-                'user_id': user_id,
-                'photo_path': photo_path
-            }
-            await self.producer.send(KAFKA_TOPIC, key=json.dumps(user_id), value=message)
-            return {'message': f'Сообщение {message} было отправлено'}
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Ошибка при отправке сообщения в Kafka: {e}")
-        finally:
-            await self.producer.stop()
+        return os.path.exists(photo_directory)
+        # photo_filename = photo.filename
+        # if not photo_filename:
+        #     raise HTTPException(status_code=400, detail="Имя файла отсутствует")
+        # photo_path = os.path.join(photo_directory, photo_filename)
+        # if not os.path.exists(photo_directory):
+        #     os.makedirs(photo_directory)
+        # try:
+        #     with open(photo_path, "wb") as buffer:
+        #         content = await photo.read()
+        #         buffer.write(content)
+        #         buffer.flush()
+        # except Exception as e:
+        #     raise HTTPException(status_code=500, detail=f"Ошибка при сохранении фото: {e}")
+        # try:
+        #     await self.producer.start()
+        #     message = {
+        #         'user_id': user_id,
+        #         'photo_path': photo_path
+        #     }
+        #     await self.producer.send(KAFKA_TOPIC, key=json.dumps(user_id), value=message)
+        #     return {'message': f'Сообщение {message} было отправлено'}
+        # except Exception as e:
+        #     raise HTTPException(status_code=500, detail=f"Ошибка при отправке сообщения в Kafka: {e}")
+        # finally:
+        #     await self.producer.stop()
 
 
 
