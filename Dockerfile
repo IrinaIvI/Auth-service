@@ -15,12 +15,11 @@ RUN apt-get update && \
 
 RUN poetry config virtualenvs.create true
 
-COPY ./auth/poetry.lock  ./auth/pyproject.toml /app/
-RUN poetry install --no-interaction --no-ansi
+COPY poetry.lock pyproject.toml ./
 
-COPY ./auth/src /app/src
-COPY ./common_base.py /app/common_base.py
+RUN poetry install --no-interaction --no-ansi -vvv
 
-ENV PYTHONPATH=/app/src
+COPY ./src /app
 
 ENTRYPOINT ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+

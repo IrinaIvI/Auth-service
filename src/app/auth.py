@@ -145,38 +145,32 @@ class Authentication:
 
     async def verify(self, user_id: int, photo: UploadFile = File(...)) -> dict:
         """Сохраняет фото на диск и отправляет сообщение в Kafka."""
-        current_directory = os.getcwd()
-        logging.info(f"Текущая рабочая директория: {current_directory}")
-        photo_directory = '/app/photos'
+        photo_directory = '/photos'
+        photo_filename = photo.filename
+        if not photo_filename:
+            raise HTTPException(status_code=400, detail="Имя файла отсутствует")
+        photo_path = os.path.join(photo_directory, photo_filename)
         if not os.path.exists(photo_directory):
-            logging.info("Создание папки по пути")
             os.makedirs(photo_directory)
-        return os.path.exists(photo_directory)
-        # photo_filename = photo.filename
-        # if not photo_filename:
-        #     raise HTTPException(status_code=400, detail="Имя файла отсутствует")
-        # photo_path = os.path.join(photo_directory, photo_filename)
-        # if not os.path.exists(photo_directory):
-        #     os.makedirs(photo_directory)
-        # try:
-        #     with open(photo_path, "wb") as buffer:
-        #         content = await photo.read()
-        #         buffer.write(content)
-        #         buffer.flush()
-        # except Exception as e:
-        #     raise HTTPException(status_code=500, detail=f"Ошибка при сохранении фото: {e}")
-        # try:
-        #     await self.producer.start()
-        #     message = {
-        #         'user_id': user_id,
-        #         'photo_path': photo_path
-        #     }
-        #     await self.producer.send(KAFKA_TOPIC, key=json.dumps(user_id), value=message)
-        #     return {'message': f'Сообщение {message} было отправлено'}
-        # except Exception as e:
-        #     raise HTTPException(status_code=500, detail=f"Ошибка при отправке сообщения в Kafka: {e}")
-        # finally:
-        #     await self.producer.stop()
+        try:
+            with open(photo_path, "wb") as buffer:
+                content = await photo.read()
+                buffer.write(content)
+                buffer.flush()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка при сохранении фото: {e}")
+        try:
+            await self.producer.start()
+            message = {
+                'user_id': user_id,
+                'photo_path': photo_path
+            }
+            await self.producer.send(KAFKA_TOPIC, key=json.dumps(user_id), value=message)
+            return {'message': f'Сообщение {message} было отправлено'}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка при отправке сообщения в Kafka: {e}")
+        finally:
+            await self.producer.stop()
 
 
 
