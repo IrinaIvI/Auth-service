@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 KAFKA_BROKER = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092')
 logger.info(f"Connecting to Kafka at: {KAFKA_BROKER}")
-KAFKA_TOPIC = 'face_verification'
+KAFKA_TOPIC = 'ivashko_topic_face_verification'
 
 class Producer:
     def __init__(self):

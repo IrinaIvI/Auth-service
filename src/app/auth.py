@@ -22,7 +22,6 @@ from app.database import get_db
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Настройки для JWT
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 5
@@ -54,37 +53,15 @@ class Authentication:
         existing_user = db.query(User).filter(User.login == login).first()
         if existing_user:
             raise HTTPException(status_code=400, detail='Такой пользователь уже существует')
-        sql = text("""
-            INSERT INTO ivashko_schema.users_ivashko (login, password, verified, created_at, updated_at)
-            VALUES (:login, :password, :verified, :created_at, :updated_at)
-            RETURNING id, login, password, verified, created_at, updated_at;
-        """)
-        result = db.execute(sql, {
-            'login': login,
-            'password': hashed_password,
-            'verified': False,
-            'created_at': datetime.now(),
-            'updated_at': datetime.now()
-        })
+        new_user = User(login=login, password=hashed_password, created_at=datetime.now(), updated_at=datetime.now())
+        db.add(new_user)
         db.commit()
-        user_data = result.fetchone()
-        user_id, user_login, user_password, user_verified, user_created_at, user_updated_at = user_data
-        if user_data is None:
-            raise HTTPException(status_code=500, detail='Ошибка при регистрации пользователя')
-        user = UserScheme(
-            login=user_login,
-            hashed_password=user_password,
-            verified=user_verified,
-            created_at=user_created_at,
-            updated_at=user_updated_at
-        )
-        return user
+        return UserScheme(login=login, hashed_password=hashed_password)
 
     def authorisation(self, login: str, password: str, db: Annotated[Session, Depends(get_db)]) -> TokenScheme:
         """Авторизация пользователя."""
         if not login.strip() or not password.strip():
             raise HTTPException(status_code=400, detail="Неправильно введены данные")
-
         try:
             user = db.query(User).filter(User.login == login).one()
             logging.info(f"Найден пользователь: {user}")
@@ -93,9 +70,7 @@ class Authentication:
                 existing_token = db.query(UserToken).filter(
                     UserToken.user_id == user.id,
                     UserToken.is_valid == True).first()
-
                 now = datetime.now()
-
                 if existing_token:
                     if existing_token.expiration_at > now:
                         return TokenScheme(token=existing_token.token)
@@ -110,23 +85,18 @@ class Authentication:
                 new_token = self.create_access_token(
                     data={"sub": user.login}, expires_delta=access_token_expires
                 )
-
-                sql = text("""
-                    INSERT INTO ivashko_schema.usertoken_ivashko (user_id, token, is_valid, expiration_at, updated_at)
-                    VALUES (:user_id, :token, :is_valid, :expiration_at, :updated_at)
-                    RETURNING token;
-                """)
-                result = db.execute(sql, {
-                    'user_id': user.id,
-                    'token': new_token,
-                    'is_valid': True,
-                    'expiration_at': now + access_token_expires,
-                    'updated_at': now
-                })
+                new_user_token = UserToken(
+                user_id=user.id,
+                token=new_token,
+                is_valid=True,
+                expiration_at=now + access_token_expires,
+                updated_at=now
+                )
+                db.add(new_user_token)
                 db.commit()
                 return TokenScheme(token=new_token)
             else:
-                raise HTTPException(status_code=401, detail="Неверный пароль")
+                    raise HTTPException(status_code=401, detail="Неверный пароль")
         except NoResultFound:
             raise HTTPException(status_code=404, detail="Пользователь не найден")
         except jwt.PyJWTError as e:
