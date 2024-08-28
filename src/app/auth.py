@@ -116,15 +116,13 @@ class Authentication:
         photo_filename = photo.filename
         if not photo_filename:
             raise HTTPException(status_code=400, detail="Имя файла отсутствует")
-
         photo_path = os.path.join(photo_directory, photo_filename)
-
         try:
-            if not os.path.exists(photo_directory):
-                os.makedirs(photo_directory)
-                print(f"Directory {photo_directory} created successfully")
+            if not os.path.exists(photo_path):
+                os.makedirs(photo_path)
+                print(f"Директория {photo_path} успешно создана")
             else:
-                print(f"Directory {photo_directory} already exists")
+                print(f"Директория {photo_path} Уже существует")
         except OSError as e:
             raise HTTPException(status_code=500, detail=f"Ошибка создания директории: {str(e)}")
 

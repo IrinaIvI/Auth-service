@@ -1,23 +1,23 @@
-# default:
-#   image: python:3.12-bookworm
+default:
+  image: python:3.12-bookworm
 
-# stages:
-#   - test
-#   - lint
+stages:
+  - test
+  - lint
 
-# run_tests:
-#   stage: test
-#   before_script:
-#     - pip install poetry
-#     - poetry install
-#   script:
-#     - export PYTHONPATH=$PYTHONPATH:/builds/shift-python/y2024/homeworks/iivashko/auth-service/src
-#     - poetry run pytest -v
+run_tests:
+  stage: test
+  before_script:
+    - pip install poetry
+    - poetry install
+  script:
+    - export PYTHONPATH=$PYTHONPATH:/builds/shift-python/y2024/homeworks/iivashko/auth-service/src
+    - poetry run pytest -v
 
-# run_linter:
-#   stage: lint
-#   before_script:
-#     - pip install poetry
-#     - poetry install
-#   script:
-#     - poetry run flake8 src/app/auth.py
+run_linter:
+  stage: lint
+  before_script:
+    - pip install poetry
+    - poetry install
+  script:
+    - poetry run flake8 src/app/auth.py
