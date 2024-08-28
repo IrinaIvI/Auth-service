@@ -2,7 +2,6 @@
 from fastapi import Depends, HTTPException,  UploadFile, File
 from sqlalchemy.orm import Session
 from typing import Annotated
-from sqlalchemy import text
 import jwt
 import os
 import os
@@ -14,7 +13,6 @@ from app.models import User, UserToken
 from sqlalchemy.exc import NoResultFound
 from passlib.context import CryptContext
 import logging
-from fastapi.responses import JSONResponse
 
 logging.basicConfig(level=logging.INFO)
 
@@ -56,7 +54,8 @@ class Authentication:
         new_user = User(login=login, password=hashed_password, created_at=datetime.now(), updated_at=datetime.now())
         db.add(new_user)
         db.commit()
-        return UserScheme(login=login, hashed_password=hashed_password)
+        return UserScheme(login=new_user.login, hashed_password=new_user.password,
+                        created_at=new_user.created_at, updated_at=new_user.updated_at)
 
     def authorisation(self, login: str, password: str, db: Annotated[Session, Depends(get_db)]) -> TokenScheme:
         """Авторизация пользователя."""
@@ -64,27 +63,25 @@ class Authentication:
             raise HTTPException(status_code=400, detail="Неправильно введены данные")
         try:
             user = db.query(User).filter(User.login == login).one()
-            logging.info(f"Найден пользователь: {user}")
-
             if self.verify_password(password, user.password):
-                existing_token = db.query(UserToken).filter(
-                    UserToken.user_id == user.id,
-                    UserToken.is_valid == True).first()
+                existing_token = db.query(UserToken).filter(UserToken.user_id == user.id, UserToken.is_valid == True).first()
                 now = datetime.now()
+
                 if existing_token:
                     if existing_token.expiration_at > now:
                         return TokenScheme(token=existing_token.token)
                     else:
-                        logging.info(f"Токен истек для пользователя {user.login}: {existing_token.token}")
                         db.query(UserToken).filter(UserToken.id == existing_token.id).update({
                             UserToken.is_valid: False,
                             UserToken.updated_at: now
                         })
                         db.commit()
+                        return TokenScheme(token=existing_token.token)
+
                 access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-                new_token = self.create_access_token(
-                    data={"sub": user.login}, expires_delta=access_token_expires
-                )
+                new_token = self.create_access_token(data={"sub": user.login},
+                                                     expires_delta=access_token_expires
+                                                     )
                 new_user_token = UserToken(
                 user_id=user.id,
                 token=new_token,
@@ -96,7 +93,7 @@ class Authentication:
                 db.commit()
                 return TokenScheme(token=new_token)
             else:
-                    raise HTTPException(status_code=401, detail="Неверный пароль")
+                raise HTTPException(status_code=401, detail="Неверный пароль")
         except NoResultFound:
             raise HTTPException(status_code=404, detail="Пользователь не найден")
         except jwt.PyJWTError as e:
@@ -115,20 +112,22 @@ class Authentication:
 
     async def verify(self, user_id: int, photo: UploadFile = File(...)) -> dict:
         """Сохраняет фото на диск и отправляет сообщение в Kafka."""
-        photo_directory = '/photos'
+        photo_directory = '/auth_photos'
         photo_filename = photo.filename
         if not photo_filename:
             raise HTTPException(status_code=400, detail="Имя файла отсутствует")
+
         photo_path = os.path.join(photo_directory, photo_filename)
-        if not os.path.exists(photo_directory):
-            os.makedirs(photo_directory)
+
         try:
-            with open(photo_path, "wb") as buffer:
-                content = await photo.read()
-                buffer.write(content)
-                buffer.flush()
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Ошибка при сохранении фото: {e}")
+            if not os.path.exists(photo_directory):
+                os.makedirs(photo_directory)
+                print(f"Directory {photo_directory} created successfully")
+            else:
+                print(f"Directory {photo_directory} already exists")
+        except OSError as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка создания директории: {str(e)}")
+
         try:
             await self.producer.start()
             message = {

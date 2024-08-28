@@ -17,7 +17,7 @@ class Producer:
 
     async def send(self, topic, key, value):
         logger.info(f"Sending message to topic {topic} with key {key} and value {value}")
-        json_value = json.dumps(value, ensure_ascii=False)  # Сериализация словаря в JSON строку
+        json_value = json.dumps(value, ensure_ascii=False)
         await self.producer.send_and_wait(topic, key=key.encode('utf-8'), value=json_value.encode('utf-8'))
         logger.info(f"Message sent to topic {topic} with key {key}")
 

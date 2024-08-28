@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, ForeignKey, MetaData
 from sqlalchemy.ext.declarative import declarative_base
-#from common_base import Base
 
 metadata = MetaData(schema="ivashko_schema")
 Base = declarative_base(metadata=metadata)
