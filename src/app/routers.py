@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 from typing import Annotated
 
 from app.auth import Authentication
@@ -19,3 +20,7 @@ def authorisation(token: Annotated[str, str, Depends(Authentication().authorisat
 def validate(result: Annotated[str, Depends(Authentication().validate)]):
     return result
 
+@router.get('/health/ready')
+async def health_check():
+    """Эндпоинт для проверки состояния сервиса."""
+    return JSONResponse(status_code=200)
