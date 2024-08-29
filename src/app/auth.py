@@ -1,9 +1,7 @@
-#from dataclasses import dataclass
-from fastapi import Depends, HTTPException,  UploadFile, File
+from fastapi import Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import Annotated
 import jwt
-import os
 import os
 import json
 from app.producer import Producer, KAFKA_TOPIC
@@ -12,16 +10,11 @@ from datetime import datetime, timedelta
 from app.models import User, UserToken
 from sqlalchemy.exc import NoResultFound
 from passlib.context import CryptContext
-import logging
-
-logging.basicConfig(level=logging.INFO)
-
 from app.database import get_db
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
+pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+SECRET_KEY = os.getenv('SECRET_KEY')
+ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 5
 
 class Authentication:
@@ -73,7 +66,7 @@ class Authentication:
                     else:
                         db.query(UserToken).filter(UserToken.id == existing_token.id).update({
                             UserToken.is_valid: False,
-                            UserToken.updated_at: now
+                            UserToken.updated_at: now,
                         })
                         db.commit()
                         return TokenScheme(token=existing_token.token)
@@ -87,7 +80,7 @@ class Authentication:
                 token=new_token,
                 is_valid=True,
                 expiration_at=now + access_token_expires,
-                updated_at=now
+                updated_at=now,
                 )
                 db.add(new_user_token)
                 db.commit()
@@ -97,7 +90,6 @@ class Authentication:
         except NoResultFound:
             raise HTTPException(status_code=404, detail="Пользователь не найден")
         except jwt.PyJWTError as e:
-            logging.error(f"JWT ошибка: {e}")
             raise HTTPException(status_code=500, detail="Ошибка в обработке токена")
 
     def validate(self, user_id: int, token: str, db: Annotated[Session, Depends(get_db)]):
@@ -130,7 +122,7 @@ class Authentication:
             await self.producer.start()
             message = {
                 'user_id': user_id,
-                'photo_path': photo_path
+                'photo_path': photo_path,
             }
             await self.producer.send(KAFKA_TOPIC, key=json.dumps(user_id), value=message)
             return {'message': f'Сообщение {message} было отправлено'}
