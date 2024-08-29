@@ -35,3 +35,7 @@ async def verify(user_id: int, photo: UploadFile = File(...)):
         await auth.producer.stop()
     return result
 
+@router.get('/health/ready')
+async def health_check():
+    """Эндпоинт для проверки состояния сервиса."""
+    return JSONResponse(status_code=200)
