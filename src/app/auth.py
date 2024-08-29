@@ -138,6 +138,3 @@ class Authentication:
             raise HTTPException(status_code=500, detail=f"Ошибка при отправке сообщения в Kafka: {e}")
         finally:
             await self.producer.stop()
-
-
-
