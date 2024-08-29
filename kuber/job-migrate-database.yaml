@@ -4,12 +4,12 @@ metadata:
   name: ivashko-migrate-job
   namespace: test
 spec:
-  backoffLimit: 0  # увеличиваем число попыток
+  backoffLimit: 0
   template:
     spec:
       containers:
       - name: migrate
-        image: merewhale/auth-service
+        image: merewhale/auth-service:1.0.0
         command: ["poetry", "run", "alembic", "upgrade", "head"]
         env:
         - name: PYTHONPATH
