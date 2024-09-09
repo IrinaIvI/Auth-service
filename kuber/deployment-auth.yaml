@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ivashko-auth-service-deployment
+  namespace: test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+      - name: auth-service
+        image: merewhale/auth-service:1.0.0
+        env:
+        - name: PYTHONPATH
+          value: /workspace/src/app
+        - name: KAFKA_HOST
+          value: infro-kafka-controller-headless:9092
+        - name: POSTGRES_HOST
+          value: http://postgres-service:5432
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-password
+        - name: POSTGRES_DB
+          value: iivashko
+        ports:
+        - containerPort: 8001
+

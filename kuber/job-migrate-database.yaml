@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ivashko-migrate-job
+  namespace: test
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - name: migrate
+        image: merewhale/auth-service:1.0.0
+        command: ["poetry", "run", "alembic", "upgrade", "head"]
+        env:
+        - name: PYTHONPATH
+          value: /workspace/src/app
+        - name: KAFKA_HOST
+          value: infro-kafka-controller-headless:9092
+        - name: POSTGRES_HOST
+          value: http://postgres-service:5432
+        - name: POSTGRES_USER
+          value: username
+        - name: POSTGRES_PASSWORD
+          value: password
+        - name: POSTGRES_DB
+          value: iivashko
+      restartPolicy: Never
